@@ -9,6 +9,7 @@ import android.os.HandlerThread;
 import android.util.Log;
 
 import com.example.pitepmerature.font.CodePage1252;
+import com.example.pitepmerature.font.CodePage437;
 import com.example.pitepmerature.font.CodePage850;
 import com.google.android.things.contrib.driver.bmx280.Bme280;
 import com.google.android.things.contrib.driver.bmx280.Bmx280;
@@ -55,6 +56,7 @@ public class MainActivity extends Activity {
 
     private float mLastTemperature;
     private float mLastPressure;
+    private float mLastHumidity;
 
     private HandlerThread mHandlerThread;
     private Handler mHandler;
@@ -63,6 +65,7 @@ public class MainActivity extends Activity {
     private int index = 0;
     DateFormat dateFormat;
     DateFormat timeFormat;
+    long startTime;
 
 	private final PeripheralManagerService managerService = new PeripheralManagerService();
 
@@ -71,6 +74,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
+        startTime = System.currentTimeMillis();
 
 
         dateFormat = new SimpleDateFormat("dd/MM/YYYY");
@@ -230,6 +234,7 @@ public class MainActivity extends Activity {
                 try {
                     mLastTemperature = bmxDriver.readTemperature();
                     mLastPressure = bmxDriver.readPressure();
+                    mLastHumidity = bmxDriver.readHumidity();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -272,25 +277,39 @@ public class MainActivity extends Activity {
 
         Date date = new Date();
 
-        if (mLastPressure > BAROMETER_RANGE_SUNNY) {
-            mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.sunny_128_64);
-       } else if (mLastPressure < BAROMETER_RANGE_RAINY) {
-           mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.rainy_128_64);
-       } else {
-            mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cloud_128_64);
-        }
+
 
         mScreen.clearPixels();
-        BitmapHelper.setBmpData(mScreen, 64, 0, mBitmap, false);
-        Graphics.text(mScreen,0,0,new CodePage850(), String.format("Pres:%4dhPa", (int)mLastPressure));
-        Graphics.text(mScreen,0,12,new CodePage850(), String.format("Temp:%.1f*C", (mLastTemperature/100)));
 
-        Graphics.line(mScreen,0,23,64,23);
-        Graphics.line(mScreen,0,24,64,24);
+        if((startTime + 5000) < System.currentTimeMillis()){
 
-        date.setTime(System.currentTimeMillis() + 7200000L);
-        Graphics.text(mScreen,0,29,new CodePage850(), timeFormat.format(date));
-        Graphics.text(mScreen,0,39,new CodePage850(), dateFormat.format(date));
+            if (mLastPressure > BAROMETER_RANGE_SUNNY) {
+                mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.sunny_128_64);
+            } else if (mLastPressure < BAROMETER_RANGE_RAINY) {
+                mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.rainy_128_64);
+            } else {
+                mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cloud_128_64);
+            }
+
+            Graphics.text(mScreen,0,0,new CodePage850(), String.format("Pres:%4dhPa", (int)mLastPressure));
+            Graphics.text(mScreen,0,10,new CodePage850(), String.format("Temp:%.1f*C", (mLastTemperature/100)));
+            Graphics.text(mScreen,0,20,new CodePage437(), String.format("Humid:%.1f%%", mLastHumidity));
+
+
+            Graphics.line(mScreen,0,31,61,31);
+            Graphics.line(mScreen,0,32,61,32);
+
+            date.setTime(System.currentTimeMillis() + 7200000L);
+            Graphics.text(mScreen,0,35,new CodePage437(), timeFormat.format(date));
+            Graphics.text(mScreen,0,45,new CodePage437(), dateFormat.format(date));
+            BitmapHelper.setBmpData(mScreen, 64, 0, mBitmap, false);
+        }else{
+            mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cat);
+            BitmapHelper.setBmpData(mScreen, 16, 0, mBitmap, false);
+            Graphics.text(mScreen,28,54,new CodePage850(), "Booting...");
+        }
+
+
 
 //        Graphics.text(mScreen,0,29,new CodePage850(), "CPU Stat");
 //        Graphics.text(mScreen,0,39,new CodePage850(), String.format("Cores:%1d", getNumCores()));
