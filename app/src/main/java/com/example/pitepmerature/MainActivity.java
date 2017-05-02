@@ -23,6 +23,9 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.RunnableFuture;
 import java.util.regex.Pattern;
@@ -58,6 +61,8 @@ public class MainActivity extends Activity {
 
     private Bitmap mBitmap;
     private int index = 0;
+    DateFormat dateFormat;
+    DateFormat timeFormat;
 
 	private final PeripheralManagerService managerService = new PeripheralManagerService();
 
@@ -65,6 +70,11 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+
+
+        dateFormat = new SimpleDateFormat("dd/MM/YYYY");
+        timeFormat = new SimpleDateFormat("HH:mm:ss");
 
 
         try {
@@ -231,7 +241,7 @@ public class MainActivity extends Activity {
 
 
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(250);
                 } catch (InterruptedException e){
 
                 }
@@ -260,6 +270,8 @@ public class MainActivity extends Activity {
 
     private void drawWeatherToOLED() {
 
+        Date date = new Date();
+
         if (mLastPressure > BAROMETER_RANGE_SUNNY) {
             mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.sunny_128_64);
        } else if (mLastPressure < BAROMETER_RANGE_RAINY) {
@@ -272,9 +284,17 @@ public class MainActivity extends Activity {
         BitmapHelper.setBmpData(mScreen, 64, 0, mBitmap, false);
         Graphics.text(mScreen,0,0,new CodePage850(), String.format("Pres:%4dhPa", (int)mLastPressure));
         Graphics.text(mScreen,0,12,new CodePage850(), String.format("Temp:%.1f*C", (mLastTemperature/100)));
-        Graphics.text(mScreen,0,29,new CodePage850(), "CPU Stat");
-        Graphics.text(mScreen,0,39,new CodePage850(), String.format("Cores:%1d", getNumCores()));
-        Graphics.text(mScreen,0,49,new CodePage850(), String.format("Usage:%.2f%%", readUsage()));
+
+        Graphics.line(mScreen,0,23,64,23);
+        Graphics.line(mScreen,0,24,64,24);
+
+        date.setTime(System.currentTimeMillis() + 7200000L);
+        Graphics.text(mScreen,0,29,new CodePage850(), timeFormat.format(date));
+        Graphics.text(mScreen,0,39,new CodePage850(), dateFormat.format(date));
+
+//        Graphics.text(mScreen,0,29,new CodePage850(), "CPU Stat");
+//        Graphics.text(mScreen,0,39,new CodePage850(), String.format("Cores:%1d", getNumCores()));
+//        Graphics.text(mScreen,0,49,new CodePage850(), String.format("Usage:%.2f%%", readUsage()));
 
     }
 
