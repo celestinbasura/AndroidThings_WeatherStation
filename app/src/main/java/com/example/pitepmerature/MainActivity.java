@@ -42,7 +42,7 @@ public class MainActivity extends Activity {
     private static final String SPEAKER_PWM_PIN = "PWM1";
     public static final float DISPLAY_BRIGHTNESS = 1.0f;
 
-    private static final long PLAYBACK_NOTE_DELAY = 800L;
+    private static final long PLAYBACK_NOTE_DELAY = 160L;
 
     private static final float BAROMETER_RANGE_SUNNY = 1010.f;
     private static final float BAROMETER_RANGE_RAINY = 990.f;
@@ -246,7 +246,7 @@ public class MainActivity extends Activity {
 
 
                 try {
-                    Thread.sleep(250);
+                    Thread.sleep(150);
                 } catch (InterruptedException e){
 
                 }
@@ -291,22 +291,22 @@ public class MainActivity extends Activity {
                 mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cloud_128_64);
             }
 
-            Graphics.text(mScreen,0,0,new CodePage850(), String.format("Pres:%4dhPa", (int)mLastPressure));
-            Graphics.text(mScreen,0,10,new CodePage850(), String.format("Temp:%.1f*C", (mLastTemperature/100)));
-            Graphics.text(mScreen,0,20,new CodePage437(), String.format("Humid:%.1f%%", mLastHumidity));
+            Graphics.text(mScreen,0,0,new CodePage437(), String.format("Pres:%4dhPa", (int)mLastPressure));
+            Graphics.text(mScreen,0,10,new CodePage437(), String.format("Temp:%.1f*C", (mLastTemperature/100)));
+            Graphics.text(mScreen,0,20,new CodePage437(), String.format("Humd:%.1f%%", mLastHumidity));
 
 
             Graphics.line(mScreen,0,31,61,31);
             Graphics.line(mScreen,0,32,61,32);
 
             date.setTime(System.currentTimeMillis() + 7200000L);
-            Graphics.text(mScreen,0,35,new CodePage437(), timeFormat.format(date));
-            Graphics.text(mScreen,0,45,new CodePage437(), dateFormat.format(date));
+            Graphics.text(mScreen,0,37,new CodePage437(), timeFormat.format(date));
+            Graphics.text(mScreen,0,47,new CodePage437(), dateFormat.format(date));
             BitmapHelper.setBmpData(mScreen, 64, 0, mBitmap, false);
         }else{
             mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cat);
             BitmapHelper.setBmpData(mScreen, 16, 0, mBitmap, false);
-            Graphics.text(mScreen,28,54,new CodePage850(), "Booting...");
+            Graphics.text(mScreen,32,55,new CodePage850(), "Booting...");
         }
 
 
@@ -331,7 +331,7 @@ public class MainActivity extends Activity {
             Log.d(TAG, "Speaker Null");
             return;
         }
-        while (TAG.equals("Do not enter")) {//Skip play
+        while ((startTime + 5000) > System.currentTimeMillis()) {//Skip play
 
 
             index++;
