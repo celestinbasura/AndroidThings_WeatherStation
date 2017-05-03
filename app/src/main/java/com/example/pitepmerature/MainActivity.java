@@ -12,6 +12,7 @@ import android.view.KeyEvent;
 import com.example.pitepmerature.font.CodePage1252;
 import com.example.pitepmerature.font.CodePage437;
 import com.example.pitepmerature.font.CodePage850;
+import com.example.pitepmerature.font.CodePageAdafruit;
 import com.example.pitepmerature.font.Font;
 import com.google.android.things.contrib.driver.bmx280.Bme280;
 import com.google.android.things.contrib.driver.bmx280.Bmx280;
@@ -75,6 +76,9 @@ public class MainActivity extends Activity {
     DateFormat dateFormat;
     DateFormat timeFormat;
     long startTime;
+    final String DEGREE  = "\u00b0";
+    int startTicker = 0;
+    String text = "Loading";
 
 	private final PeripheralManagerService managerService = new PeripheralManagerService();
 
@@ -270,8 +274,8 @@ public class MainActivity extends Activity {
 
 
 	private void readSample() {
-            while(true) {
 
+            while(true) {
                 try {
                     mLastTemperature = bmxDriver.readTemperature();
                     mLastPressure = bmxDriver.readPressure();
@@ -279,12 +283,7 @@ public class MainActivity extends Activity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-
-               // Log.d(TAG, "Temperature: " + mLastTemperature);
-               // Log.d(TAG, "Pressure: " + mLastPressure);
-                //Log.d(TAG, "Humidity: " + bmxDriver.readHumidity());
                 updateNumericDisplays();
-
 
                 try {
                     Thread.sleep(150);
@@ -317,9 +316,7 @@ public class MainActivity extends Activity {
     private void drawWeatherToOLED() {
 
         Date date = new Date();
-
-        Font font = new CodePage1252();
-        String text = "Loading...";
+        Font font = new CodePage437();
 
         mScreen.clearPixels();
 
@@ -333,17 +330,16 @@ public class MainActivity extends Activity {
                 mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cloud_128_64);
             }
 
-            Graphics.text(mScreen,0,0, font, String.format("Pres:%4dhPa", (int)mLastPressure));
-            Graphics.text(mScreen,0,10,font, String.format("Temp:%.1f*C", (mLastTemperature/100)));
-            Graphics.text(mScreen,0,20,font, String.format("Humd:%.1f%%", mLastHumidity));
+            Graphics.drawTextNew(mScreen,0,1,font,String.format("%.1f*C", (mLastTemperature/100)), 2.0f);
 
+            Graphics.drawTextNew(mScreen,0,22, font, String.format("%4dhPa", (int)mLastPressure),1.3f);
 
-            Graphics.line(mScreen,0,31,61,31);
-            Graphics.line(mScreen,0,32,61,32);
+            Graphics.line(mScreen,0,35,61,35);
+            Graphics.line(mScreen,0,36,61,36);
 
             date.setTime(System.currentTimeMillis() + 7200000L);
-            Graphics.text(mScreen,0,37,font, timeFormat.format(date));
-            Graphics.text(mScreen,0,47,font, dateFormat.format(date));
+            Graphics.drawTextNew(mScreen,0,41,font, timeFormat.format(date), 1.3f);
+            Graphics.drawTextNew(mScreen,0,52,font, dateFormat.format(date), 1.1f);
             BitmapHelper.setBmpData(mScreen, 64, 0, mBitmap, false);
         }else{
 
@@ -354,7 +350,18 @@ public class MainActivity extends Activity {
             Graphics.drawChar(mScreen,12,0,font,bytes[2], 1);
             Graphics.drawChar(mScreen,18,0,font,bytes[3], 1);*/
 
-            Graphics.drawTextNew(mScreen,0,25,font,text, 2.5f);
+            if(startTicker == 1){
+                text = "Loading.";
+            }
+            if(startTicker == 5){
+                text = "Loading..";
+            }
+            if(startTicker == 8){
+                text = "Loading...";
+            }
+            startTicker++;
+
+            Graphics.drawTextNew(mScreen,0,25,font,text, 2.0f);
 
         }
 

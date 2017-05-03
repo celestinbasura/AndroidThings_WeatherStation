@@ -1,12 +1,11 @@
 package com.example.pitepmerature;
 
+
 import android.util.Log;
 
 import com.example.pitepmerature.font.Font;
 import com.google.android.things.contrib.driver.ssd1306.Ssd1306;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
 /**
@@ -18,10 +17,16 @@ public class Graphics {
 
     public static void drawFastVLine(Ssd1306 ssd1306, int x, int y, int h) {
         line(ssd1306, x, y, x, y + h - 1);
+
     }
 
     public static void fillRect(Ssd1306 ssd1306, float x, float y, float w, float h) {
+
         for (float i = x; i < x + w; i++) {
+
+          //  if(y%0.5 == 0){
+           //     y = y - 0.1f;
+           // }
             drawFastVLine(ssd1306, Math.round(i), Math.round(y), Math.round(h));
         }
     }
@@ -55,12 +60,10 @@ public class Graphics {
     public static void drawTextNew(Ssd1306 ssd1306, int x, int y, Font font, String text, float size) {
 
         int offset = 6;
-        int[] glyphs = font.getGlyphs();
         byte [] bytes = text.getBytes(Charset.forName(font.getName()));
 
         for(int i = 0;i < text.length(); i++ ){
-            drawChar(ssd1306, (int)(x +(offset * size))*i ,y , font, bytes[i], size);
-
+            drawChar(ssd1306, Math.round(x +(offset * size))*i ,y , font, bytes[i], size);
         }
 
 
@@ -69,23 +72,22 @@ public class Graphics {
     // draw a character
     public static void drawChar(Ssd1306 ssd1306, int x, int y, Font font, byte c, float size) {
 
-
         int[] glyphs = font.getGlyphs();
 
         if ((x >= 128) || // Clip right
                 (y >= 64) || // Clip bottom
-                ((x + 5 * size - 1) < 0) || // Clip left
-                ((y + 8 * size - 1) < 0)) // Clip top
+                ((x + (5 * size) - 1) < 0) || // Clip left
+                ((y + (8 * size) - 1) < 0)) // Clip top
         {
             return;
         }
 
         for (int i = 0; i < 6; i++) {
-            short line;
+            int line;
             if (i == 5) {
                 line = 0x0;
             } else {
-                line = (short)glyphs[(c * 5) + i];
+                line = glyphs[(c * 5) + i];
             }
             for (int j = 0; j < 8; j++) {
                 if ((line & 0x01) == 0x01) {
@@ -94,6 +96,10 @@ public class Graphics {
                         ssd1306.setPixel(x + i, y + j, true);
                     } else {  // big size
                         fillRect(ssd1306, x + (i * size),y + (j * size), size, size);
+
+                        if(((Math.round(((j+1) * size))) - (Math.round((j * size)))) > 1 ){
+                            fillRect(ssd1306, x + (i * size),(y + 1 + (j * size)), size, size);
+                        }
                     }
 
                 }
