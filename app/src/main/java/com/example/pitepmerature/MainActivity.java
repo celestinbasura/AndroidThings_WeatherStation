@@ -7,12 +7,16 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import com.example.pitepmerature.font.CodePage1252;
 import com.example.pitepmerature.font.CodePage437;
 import com.example.pitepmerature.font.CodePage850;
+import com.example.pitepmerature.font.Font;
 import com.google.android.things.contrib.driver.bmx280.Bme280;
 import com.google.android.things.contrib.driver.bmx280.Bmx280;
+import com.google.android.things.contrib.driver.button.Button;
+import com.google.android.things.contrib.driver.button.ButtonInputDriver;
 import com.google.android.things.contrib.driver.pwmspeaker.Speaker;
 import com.google.android.things.contrib.driver.ssd1306.BitmapHelper;
 import com.google.android.things.contrib.driver.ssd1306.Ssd1306;
@@ -24,12 +28,15 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.charset.Charset;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.RunnableFuture;
 import java.util.regex.Pattern;
+
+import static android.R.attr.text;
+import static com.example.pitepmerature.Graphics.drawTextNew;
 
 public class MainActivity extends Activity {
 
@@ -40,6 +47,7 @@ public class MainActivity extends Activity {
     private static final String DISPLAY_PRESS_CLOCK = "BCM6";
     private static final String DISPLAY_PRESS_DATA = "BCM5";
     private static final String SPEAKER_PWM_PIN = "PWM1";
+    private static final String BUTTON_INPUT = "BCM17";
     public static final float DISPLAY_BRIGHTNESS = 1.0f;
 
     private static final long PLAYBACK_NOTE_DELAY = 160L;
@@ -52,6 +60,7 @@ public class MainActivity extends Activity {
     private Speaker mSpeaker;
     private Ssd1306 mScreen;
     private Bme280 bmxDriver;
+    private ButtonInputDriver mButton;
 
 
     private float mLastTemperature;
@@ -88,10 +97,19 @@ public class MainActivity extends Activity {
             mScreen.show();
 
 
+            mButton = new ButtonInputDriver(BUTTON_INPUT,
+                    Button.LogicState.PRESSED_WHEN_LOW,
+                    KeyEvent.KEYCODE_A // the keycode to send
+            );
+            mButton.register();
+            Log.d(TAG, "Button is registerd:");
+
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
 
 
     //Sensor readouts and OLED updates are kept on same thread for IIC bus stability
@@ -117,6 +135,27 @@ public class MainActivity extends Activity {
 
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        Log.d(TAG, "Any Button Pressed");
+        if (keyCode == KeyEvent.KEYCODE_A) {
+            Log.d(TAG, "Button Pressed");
+            return true; // indicate we handled the event
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        Log.d(TAG, "Button Released");
+        if (keyCode == KeyEvent.KEYCODE_A) {
+            Log.d(TAG, "Button Released");
+            return true; // indicate we handled the event
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         try {
@@ -131,6 +170,8 @@ public class MainActivity extends Activity {
             mSpeaker.stop();
             mSpeaker.close();
             mSpeaker = null;
+            mButton.unregister();
+            mButton.close();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -277,7 +318,8 @@ public class MainActivity extends Activity {
 
         Date date = new Date();
 
-
+        Font font = new CodePage1252();
+        String text = "Loading...";
 
         mScreen.clearPixels();
 
@@ -291,22 +333,29 @@ public class MainActivity extends Activity {
                 mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cloud_128_64);
             }
 
-            Graphics.text(mScreen,0,0,new CodePage437(), String.format("Pres:%4dhPa", (int)mLastPressure));
-            Graphics.text(mScreen,0,10,new CodePage437(), String.format("Temp:%.1f*C", (mLastTemperature/100)));
-            Graphics.text(mScreen,0,20,new CodePage437(), String.format("Humd:%.1f%%", mLastHumidity));
+            Graphics.text(mScreen,0,0, font, String.format("Pres:%4dhPa", (int)mLastPressure));
+            Graphics.text(mScreen,0,10,font, String.format("Temp:%.1f*C", (mLastTemperature/100)));
+            Graphics.text(mScreen,0,20,font, String.format("Humd:%.1f%%", mLastHumidity));
 
 
             Graphics.line(mScreen,0,31,61,31);
             Graphics.line(mScreen,0,32,61,32);
 
             date.setTime(System.currentTimeMillis() + 7200000L);
-            Graphics.text(mScreen,0,37,new CodePage437(), timeFormat.format(date));
-            Graphics.text(mScreen,0,47,new CodePage437(), dateFormat.format(date));
+            Graphics.text(mScreen,0,37,font, timeFormat.format(date));
+            Graphics.text(mScreen,0,47,font, dateFormat.format(date));
             BitmapHelper.setBmpData(mScreen, 64, 0, mBitmap, false);
         }else{
-            mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cat);
-            BitmapHelper.setBmpData(mScreen, 16, 0, mBitmap, false);
-            Graphics.text(mScreen,32,55,new CodePage850(), "Booting...");
+
+            //mBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.cat);
+            //BitmapHelper.setBmpData(mScreen, 16, 0, mBitmap, false);
+          /*  Graphics.drawChar(mScreen,0,0,font,bytes[0], 1);
+            Graphics.drawChar(mScreen,6,0,font,bytes[1], 1);
+            Graphics.drawChar(mScreen,12,0,font,bytes[2], 1);
+            Graphics.drawChar(mScreen,18,0,font,bytes[3], 1);*/
+
+            Graphics.drawTextNew(mScreen,0,25,font,text, 2.5f);
+
         }
 
 
