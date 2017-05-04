@@ -1,4 +1,4 @@
-package com.example.pitepmerature;
+package com.example.pitepmerature.Drivers;
 
 
 import android.util.Log;
@@ -28,31 +28,6 @@ public class Graphics {
            //     y = y - 0.1f;
            // }
             drawFastVLine(ssd1306, Math.round(i), Math.round(y), Math.round(h));
-        }
-    }
-
-
-    public static void text(Ssd1306 ssd1306,int x, int y, Font font, String text) {
-        int rows = font.getRows();
-        int cols = font.getColumns();
-        int[] glyphs = font.getGlyphs();
-        byte[] bytes = text.getBytes(Charset.forName(font.getName()));
-
-        for(int i = 0; i < text.length(); i++) {
-            int p = (bytes[i] & 0xFF) * cols;
-
-            for(int col = 0; col < cols; col++) {
-                int mask = glyphs[p++];
-
-                for(int row = 0; row < rows; row++) {
-                    ssd1306.setPixel(x, y + row, (mask & 1) == 1);
-                    mask >>= 1;
-                }
-
-                x++;
-            }
-
-            x++;
         }
     }
 

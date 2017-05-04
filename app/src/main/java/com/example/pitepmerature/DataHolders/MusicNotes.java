@@ -1,4 +1,4 @@
-package com.example.pitepmerature;
+package com.example.pitepmerature.DataHolders;
 
 /**
  * Created by Celestin on 2/05/2017.
