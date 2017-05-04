@@ -17,6 +17,7 @@ import android.view.KeyEvent;
 import com.example.pitepmerature.DataHolders.MusicNotes;
 import com.example.pitepmerature.Drivers.Graphics;
 import com.example.pitepmerature.Drivers.LedControl;
+import com.example.pitepmerature.WebServer.HttpdServer;
 import com.example.pitepmerature.font.CodePage437;
 import com.example.pitepmerature.font.Font;
 import com.google.android.things.contrib.driver.bmx280.Bme280;
@@ -84,6 +85,8 @@ public class MainActivity extends Activity {
     private HandlerThread mHandlerThread;
     private Handler mHandler;
 
+    private HttpdServer httpdserver;
+
     private Bitmap mBitmap;
     private int index3 = 0;
     DateFormat dateFormat;
@@ -99,6 +102,10 @@ public class MainActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+
+
+
+
 
         startTime = System.currentTimeMillis();
 
@@ -120,6 +127,9 @@ public class MainActivity extends Activity {
             );
             mButton.register();
             Log.d(TAG, "Button is registerd:");
+
+            httpdserver = new HttpdServer();
+            httpdserver.start();
 
 
         } catch (IOException e) {
@@ -146,7 +156,6 @@ public class MainActivity extends Activity {
 		printDeviceId();
 
         initBME280();
-
 
 		readSample();
 
@@ -207,6 +216,7 @@ public class MainActivity extends Activity {
             mSpeaker = null;
             mButton.unregister();
             mButton.close();
+            httpdserver.stop();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -356,6 +366,8 @@ public class MainActivity extends Activity {
                     e.printStackTrace();
                 }
                 updateNumericDisplays();
+                httpdserver.setTemp(mLastTemperature/100.0f);
+                httpdserver.setPress(mLastPressure);
 
                 try {
                     Thread.sleep(150);
@@ -594,6 +606,7 @@ public class MainActivity extends Activity {
 
         return 0;
     }
+
 
 }
 

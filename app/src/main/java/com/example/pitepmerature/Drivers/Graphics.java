@@ -23,10 +23,6 @@ public class Graphics {
     public static void fillRect(Ssd1306 ssd1306, float x, float y, float w, float h) {
 
         for (float i = x; i < x + w; i++) {
-
-          //  if(y%0.5 == 0){
-           //     y = y - 0.1f;
-           // }
             drawFastVLine(ssd1306, Math.round(i), Math.round(y), Math.round(h));
         }
     }
